@@ -24,6 +24,10 @@ def find_page_index(id):
         if p['id'] == id:
             return i
 
+@app.get('')
+def root():
+    return {'message':'Hello World'}
+
 @app.get('/posts')
 def get_posts():
     return {'message':my_posts}
