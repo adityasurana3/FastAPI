@@ -9,7 +9,8 @@ app = FastAPI()
 class Post(BaseModel):
     title: str
     content: str
-    rating: Optional[int] = None
+    published: bool = True
+    
 
 my_posts = [{'title':'title 1','content':'Content of post1',"id":1},{'title':'title 2','content':'Content of post2',"id":2}]
 
