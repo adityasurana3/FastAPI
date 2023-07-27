@@ -3,9 +3,21 @@ from pydantic import BaseModel
 from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from . import models
+from .database import engine, SessionLocal 
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 class Post(BaseModel):
     title: str
@@ -15,7 +27,7 @@ class Post(BaseModel):
 
 while True:
     try:
-        conn = psycopg2.connect(database='fastapi',user='postgres',password='admin@123',host='localhost',cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(database='fastapi',user='postgres',password='admin',host='localhost',cursor_factory=RealDictCursor)
         cursor = conn.cursor()
         print("Database connected")
         break
@@ -35,6 +47,10 @@ def find_post_index(id):
         if post["id"] == id:
             return i
 
+
+@app.get('/sql')
+def get_sql(db: Session = Depends(get_db)):
+    return{'db':'success'}
 
 @app.get('/posts')
 def get_posts():
