@@ -1,12 +1,13 @@
 from fastapi import FastAPI, status, HTTPException, Response
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from . import models
+from . import models, schemas
 from .database import engine, SessionLocal 
 from sqlalchemy.orm import Session
 from fastapi import Depends
+from .utils import hash_password
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -48,19 +49,15 @@ def find_post_index(id):
             return i
 
 
-@app.get('/sql')
-def get_sql(db: Session = Depends(get_db)):
-    return{'db':'success'}
-
-@app.get('/posts')
+@app.get('/posts', response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute(''' SELECT * from posts ''')
     # post = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {'data': posts}
+    return posts
 
-@app.post('/posts', status_code=status.HTTP_201_CREATED)
-def new_post(post: Post, db: Session = Depends(get_db)):
+@app.post('/posts', status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+def new_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # cursor.execute(""" INSERT INTO posts(title, content, published) VALUES(%s, %s, %s) RETURNING *""", (post.title, post.content, post.published))
     # post = cursor.fetchone()
     # conn.commit()
@@ -68,7 +65,7 @@ def new_post(post: Post, db: Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return{'new_post':new_post}
+    return new_post
 
 @app.get('/posts/{id}')
 def get_posts(id: int, db: Session = Depends(get_db)):
@@ -77,7 +74,7 @@ def get_posts(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with {id} not found")
-    return {'post_detail':post}
+    return post
 
 @app.delete('/posts/{id}')
 def delete_post(id: int, db: Session = Depends(get_db)):
@@ -94,7 +91,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @app.put('/posts/{id}')
-def update_post(id: int, updated_post: Post, db: Session = Depends(get_db)):
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
     # cursor.execute("""UPDATE posts SET title=%s, content = %s, published=%s WHERE id=%s RETURNING *""",(post.title, post.content, post.published, str(id)))
     # updated_post = cursor.fetchone()
     # conn.commit()
@@ -107,3 +104,13 @@ def update_post(id: int, updated_post: Post, db: Session = Depends(get_db)):
     return{"data":post_query.first()}
 
 
+@app.post('/users', status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def create_user(user:schemas.UserCreate,db: Session = Depends(get_db)):
+    hashed_password = hash_password(user.password)
+    user.password = hashed_password
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
