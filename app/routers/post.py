@@ -1,4 +1,3 @@
-from ..utils import hash_password
 from fastapi import status, HTTPException, Response, Depends
 from .. import models, schemas
 from sqlalchemy.orm import Session
@@ -6,9 +5,12 @@ from ..database import get_db
 from fastapi import APIRouter
 from typing import List
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/posts', #So that we dont have to write posts in all the router for the router which have id /posts/{id}/
+    tags=['Posts']
+)
 
-@router.get('/posts', response_model=List[schemas.Post])
+@router.get('/', response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute(''' SELECT * from posts ''')
     # post = cursor.fetchall()
@@ -16,7 +18,7 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
 
 
-@router.post('/posts', status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
 def new_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # cursor.execute(""" INSERT INTO posts(title, content, published) VALUES(%s, %s, %s) RETURNING *""", (post.title, post.content, post.published))
     # post = cursor.fetchone()
@@ -28,7 +30,7 @@ def new_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     return new_post
 
 
-@router.get('/posts/{id}')
+@router.get('/{id}')
 def get_posts(id: int, db: Session = Depends(get_db)):
     # cursor.execute(""" SELECT * from posts where id=%s """, (str(id)))
     # post = cursor.fetchone()
@@ -38,7 +40,7 @@ def get_posts(id: int, db: Session = Depends(get_db)):
     return post
 
 
-@router.delete('/posts/{id}')
+@router.delete('/{id}')
 def delete_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute("""DELETE FROM posts where id=%s RETURNING *""",str(id))
     # deleted_post = cursor.fetchone()
@@ -51,7 +53,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put('/posts/{id}')
+@router.put('/{id}')
 def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
     # cursor.execute("""UPDATE posts SET title=%s, content = %s, published=%s WHERE id=%s RETURNING *""",(post.title,
     # post.content, post.published, str(id))) updated_post = cursor.fetchone() conn.commit()
