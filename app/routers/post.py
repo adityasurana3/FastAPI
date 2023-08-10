@@ -1,5 +1,5 @@
 from fastapi import status, HTTPException, Response, Depends
-from .. import models, schemas
+from .. import models, schemas, oauth2
 from sqlalchemy.orm import Session
 from ..database import get_db
 from fastapi import APIRouter
@@ -19,7 +19,7 @@ def get_posts(db: Session = Depends(get_db)):
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-def new_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
+def new_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute(""" INSERT INTO posts(title, content, published) VALUES(%s, %s, %s) RETURNING *""", (post.title, post.content, post.published))
     # post = cursor.fetchone()
     # conn.commit()
@@ -31,7 +31,7 @@ def new_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
 
 
 @router.get('/{id}')
-def get_posts(id: int, db: Session = Depends(get_db)):
+def get_posts(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute(""" SELECT * from posts where id=%s """, (str(id)))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
@@ -41,7 +41,7 @@ def get_posts(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete('/{id}')
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""DELETE FROM posts where id=%s RETURNING *""",str(id))
     # deleted_post = cursor.fetchone()
     # conn.commit()
@@ -54,7 +54,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.put('/{id}')
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""UPDATE posts SET title=%s, content = %s, published=%s WHERE id=%s RETURNING *""",(post.title,
     # post.content, post.published, str(id))) updated_post = cursor.fetchone() conn.commit()
     post_query = db.query(models.Post).filter(models.Post.id == id)
