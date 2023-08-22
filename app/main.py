@@ -1,7 +1,4 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from . import models
 from .database import engine
 from .routers import post, user, auth
@@ -16,17 +13,6 @@ app.include_router(user.router)
 app.include_router(auth.router)
 
 
-
-while True:
-    try:
-        conn = psycopg2.connect(database='fastapi', user='postgres', password='admin', host='localhost',
-                                cursor_factory=RealDictCursor)
-        cursor = conn.cursor()
-        print("Database connected")
-        break
-    except Exception as error:
-        print("Connection to data base failed")
-        print("Error: ", error)
 
 my_posts = [{'title': 'title 1', 'content': 'Content of post1', "id": 1},
             {'title': 'title 2', 'content': 'Content of post2', "id": 2}]
