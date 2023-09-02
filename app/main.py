@@ -11,7 +11,7 @@ app = FastAPI()
 app.include_router(post.router)
 app.include_router(user.router)
 app.include_router(auth.router)
-
+app.include_router(auth.router)
 
 
 my_posts = [{'title': 'title 1', 'content': 'Content of post1', "id": 1},
